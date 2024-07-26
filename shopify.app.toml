@@ -1,0 +1,33 @@
+# Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
+
+client_id = "c57e52d038c52dec927d26600fcc9d4b"
+name = "test"
+handle = "test-14823"
+application_url = "https://acrobat-highlighted-negotiations-barriers.trycloudflare.com"
+embedded = true
+
+[build]
+automatically_update_urls_on_dev = true
+dev_store_url = "curso-shopi.myshopify.com"
+include_config_on_deploy = true
+
+[access_scopes]
+# Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
+scopes = "write_products"
+
+[auth]
+redirect_urls = [
+  "https://acrobat-highlighted-negotiations-barriers.trycloudflare.com/auth/callback",
+  "https://acrobat-highlighted-negotiations-barriers.trycloudflare.com/auth/shopify/callback",
+  "https://acrobat-highlighted-negotiations-barriers.trycloudflare.com/api/auth/callback"
+]
+
+[webhooks]
+api_version = "2024-07"
+
+  [[webhooks.subscriptions]]
+  topics = [ "app/uninstalled" ]
+  uri = "/webhooks"
+
+[pos]
+embedded = false
