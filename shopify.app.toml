@@ -3,7 +3,7 @@
 client_id = "c57e52d038c52dec927d26600fcc9d4b"
 name = "test"
 handle = "test-14823"
-application_url = "https://acrobat-highlighted-negotiations-barriers.trycloudflare.com"
+application_url = "https://acting-located-wikipedia-reject.trycloudflare.com"
 embedded = true
 
 [build]
@@ -17,9 +17,9 @@ scopes = "write_products"
 
 [auth]
 redirect_urls = [
-  "https://acrobat-highlighted-negotiations-barriers.trycloudflare.com/auth/callback",
-  "https://acrobat-highlighted-negotiations-barriers.trycloudflare.com/auth/shopify/callback",
-  "https://acrobat-highlighted-negotiations-barriers.trycloudflare.com/api/auth/callback"
+  "https://acting-located-wikipedia-reject.trycloudflare.com/auth/callback",
+  "https://acting-located-wikipedia-reject.trycloudflare.com/auth/shopify/callback",
+  "https://acting-located-wikipedia-reject.trycloudflare.com/api/auth/callback"
 ]
 
 [webhooks]
