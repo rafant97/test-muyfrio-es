@@ -36,15 +36,15 @@ export async function action({request}) {
   //update database
   await db.settings.upsert({
     where: {
-      id: '1'
+      id: 1
     },
     update: {
-      id: '1',
+      id: 1,
       name: settings.name,
       description: settings.description
     },
     create: {
-      id: '1',
+      id: 1,
       name: settings.name,
       description: settings.description
     }
