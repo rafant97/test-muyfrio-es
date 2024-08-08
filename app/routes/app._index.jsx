@@ -1,33 +1,22 @@
 import {
   Box,
   Card,
-  Layout,
-  Link,
-  List,
   Page,
   Text,
   BlockStack,
   InlineGrid,
   TextField,
   Button,
-  Select,
-  useBreakpoints,
   OptionList,
 } from "@shopify/polaris";
-import { useState, useCallback, useEffect } from "react";
-import { json } from "@remix-run/node";
+import { useState, useCallback } from "react";
 import { useLoaderData, Form } from "@remix-run/react";
+import { json } from "@remix-run/node";
 
 export async function loader() {
   let diaSemanaSet = '0';
   let hora = "20:00";
   return json({ diaSemanaSet, hora });
-}
-
-export async function action({ request }) {
-  let data = await request.formData();
-  data = Object.fromEntries(data);
-  return json(data);
 }
 
 export default function SettingsPage() {
@@ -61,7 +50,7 @@ export default function SettingsPage() {
             </BlockStack>
           </Box>
           <Card roundedAbove="sm">
-            <Form method="POST">
+            <Form method="POST" action="/api/wishlist"> {/* Acción del formulario */}
               <BlockStack gap="400">
                 <OptionList
                   title="Día de la semana"
@@ -101,7 +90,7 @@ export default function SettingsPage() {
             </BlockStack>
           </Box>
           <Card roundedAbove="sm">
-            <Form method="POST">
+            <Form method="POST" action="/api/wishlist"> {/* Acción del formulario */}
               <BlockStack gap="400">
                 <TextField 
                   label="Hora en formato 24h (ejemplo: 20:00)" 
