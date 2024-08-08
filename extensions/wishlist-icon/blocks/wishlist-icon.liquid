@@ -103,6 +103,8 @@
 
 </style>
 
+
+
 <script>
   const currentDate = new Date();
   let currentMonth = currentDate.getMonth();
@@ -114,6 +116,9 @@
   
   const prevBtn = document.getElementById('prevBtn');
   const nextBtn = document.getElementById('nextBtn');
+
+  //TODO: COMPROBAR SI ESTÁ EL RECARGO EN EL CARRITO PARA ELIMINARLO
+  
 
   //TODO: VALIDACIÓN SI NO HA SELECCIONADO FECHA
   const checkoutButton = document.querySelector('#checkout')
@@ -157,8 +162,9 @@
           const date = new Date(currentYear, currentMonth, i);
           const className = getDayClassName(date);
           const isPastDate = date < currentDate && date.toDateString() !== currentDate.toDateString();
+          const isSundayOrMonday = date.getDay() === 0 || date.getDay() === 1;
   
-          if (isPastDate) {
+          if (isPastDate || isSundayOrMonday) {
               days += `<div class="calendar-day ${className} past-date">${i}</div>`;
           } else {
               days += `<div class="calendar-day ${className}" onclick="selectDate(${i})">${i}</div>`;
@@ -174,40 +180,83 @@
       checkoutButton.style.pointerEvents = 'auto';
   
       console.log(`Selected date: ${formatDate(selectedDate)}`);
-      //Hacer lógica para añadir recargo por envio sabado
-      if (selectedDate.getDay() === 6) { // 6 representa el sábado
+      //Comprobar si la fecha seleccionada es sabado
+      if (selectedDate.getDay() === 6) { 
           console.log('Has seleccionado un sábado');
-          console.log("{{ product.variants.first.id }}") 
-      } else {
-        
-        console.log("{{ product.variants.first.id }}")
-        let formData = {
-            'items': [{
-             'id': 49131205362003,
-             'quantity': 1,
-              'properties':{'Fecha de Entrega': formatDate(selectedDate)}
-             }]
-           };
-           
-           fetch(window.Shopify.routes.root + 'cart/add.js', {
-             method: 'POST',
-             headers: {
-               'Content-Type': 'application/json'
-             },
-             body: JSON.stringify(formData)
-           })
-           .then(response => {
-             return response.json();
-           })
-           .catch((error) => {
-             console.error('Error:', error);
-           });
-      }
+          console.log("{{ product.variants.first.id }}")
 
-      //Add date to line items properties
-  
+          //Comprobar si el recargo está en el carrito
+          getCartItems().then(cart => {
+            // Aquí accedes a los elementos del carrito
+            let recargoExists = cart.items.some(item => item.variant_id === 49131205362003);
+            if (recargoExists) {
+                console.log('El recargo ya existe en el carrito');
+              } else {
+                console.log('Añadiendo el recargo');
+                addRecargoToCart();
+
+                // Añadir la fecha seleccionada como nota en el carrito
+                updateCartNote();
+              }
+          });
+      }
       renderCalendar();
   }
+
+  function updateCartNote() {
+    let formData = {
+      'note': `Fecha de entrega: ${formatDate(selectedDate)}`
+    };
+
+    fetch(window.Shopify.routes.root + 'cart/update.js', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(formData)
+    })
+    .then(response => {
+      return response.json();
+    })
+    .catch((error) => {
+      console.error('Error:', error);
+    });
+  }
+
+  function addRecargoToCart() {
+    console.log('Añadiendo el recargo')
+    let formData = {
+        'items': [{
+         'id': 49131205362003,
+         'quantity': 1,
+          'properties':{'Fecha de Entrega': formatDate(selectedDate)}
+        }]
+    };
+       
+    fetch(window.Shopify.routes.root + 'cart/add.js', {
+         method: 'POST',
+         headers: {
+           'Content-Type': 'application/json'
+         },
+         body: JSON.stringify(formData)
+    })
+    .then(response => {
+         return response.json();
+    })
+    .catch((error) => {
+         console.error('Error:', error);
+    });
+  }
+
+  async function getCartItems() {
+        try {
+        const response = await fetch(window.Shopify.routes.root + 'cart.js');
+        const data = await response.json();
+        return data;
+        } catch (error) {
+        console.error('Error:', error);
+        }
+    }
   
   
   function getDayClassName(date) {
@@ -225,7 +274,6 @@
   }
   
   renderCalendar();
-
   
 </script>
 
