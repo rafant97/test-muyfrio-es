@@ -106,6 +106,28 @@
 
 
 <script>
+  // Variables para almacenar el día de la semana y la hora de corte obtenidos del servidor
+  let serverDiaSemana;
+  let serverHora;
+
+  // Fetch data from the server when the page loads
+  async function fetchServerData() {
+    try {
+      const response = await fetch('/api/wishlist');
+      const data = await response.json();
+
+      serverDiaSemana = data.diaSemana;
+      serverHora = data.hora;
+
+      console.log('Datos desde el servidor:', { serverDiaSemana, serverHora });
+
+      // Puedes hacer algo con estos datos, como marcar ciertas fechas en el calendario
+    } catch (error) {
+      console.error('Error al obtener los datos del servidor:', error);
+    }
+  }
+
+  fetchServerData(); // Llamar a la función para obtener los datos
   const currentDate = new Date();
   let currentMonth = currentDate.getMonth();
   let currentYear = currentDate.getFullYear();

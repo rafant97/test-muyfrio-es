@@ -1,18 +1,25 @@
 // api/wishlist.jsx
 import { json } from "@remix-run/node";
+import { cors } from "remix-utils";
+
+// Simulación de base de datos en memoria (solo para fines de demostración)
+let wishListData = {};
 
 export async function action({ request }) {
-  const data = await request.formData();
-  const parsedData = Object.fromEntries(data);
+  const formData = await request.formData();
+  const diaSemana = formData.get("diaSemana");
+  const hora = formData.get("hora");
 
-  // Aquí se hace el console.log de los datos recibidos
-  console.log('Datos recibidos:', parsedData);
+  // Almacena los datos en memoria
+  wishListData = { diaSemana, hora };
 
-  // Devolver los datos recibidos como JSON
-  return json(parsedData);
+  console.log("Datos guardada:", { diaSemana, hora });
+
+  const response = json({ message: "Datos guardada", diaSemana, hora });
+  return cors(request, response);
 }
 
-export default function WishlistAPI() {
-  // Este componente no se renderiza, pero es necesario para Remix
-  return null;
+export async function loader() {
+  // Devuelve los datos almacenados
+  return json(wishListData);
 }
