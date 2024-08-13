@@ -1,6 +1,5 @@
 // api/wishlist.jsx
 import { json } from "@remix-run/node";
-import { cors } from "remix-utils";
 
 // Simulación de base de datos en memoria (solo para fines de demostración)
 let wishListData = {};
@@ -13,13 +12,15 @@ export async function action({ request }) {
   // Almacena los datos en memoria
   wishListData = { diaSemana, hora };
 
-  console.log("Datos guardada:", { diaSemana, hora });
+  const applicationUrl = process.env.SHOPIFY_APP_URL ?? null;
 
-  const response = json({ message: "Datos guardada", diaSemana, hora });
-  return cors(request, response);
+  console.log("Datos guardada:", { diaSemana, hora }, { applicationUrl });
+
+  const response = json({ message: "Datos guardada", diaSemana, hora, applicationUrl});
+  return(response);
 }
 
 export async function loader() {
-  // Devuelve los datos almacenados
+  
   return json(wishListData);
 }
