@@ -3,7 +3,7 @@
 client_id = "c57e52d038c52dec927d26600fcc9d4b"
 name = "test"
 handle = "test-14823"
-application_url = "https://apparent-nuclear-literacy-keyword.trycloudflare.com"
+application_url = "https://php-renewal-victor-assessments.trycloudflare.com"
 embedded = true
 
 [build]
@@ -17,9 +17,9 @@ scopes = "write_products"
 
 [auth]
 redirect_urls = [
-  "https://apparent-nuclear-literacy-keyword.trycloudflare.com/auth/callback",
-  "https://apparent-nuclear-literacy-keyword.trycloudflare.com/auth/shopify/callback",
-  "https://apparent-nuclear-literacy-keyword.trycloudflare.com/api/auth/callback"
+  "https://php-renewal-victor-assessments.trycloudflare.com/auth/callback",
+  "https://php-renewal-victor-assessments.trycloudflare.com/auth/shopify/callback",
+  "https://php-renewal-victor-assessments.trycloudflare.com/api/auth/callback"
 ]
 
 [webhooks]

@@ -51,10 +51,10 @@ export default function SettingsPage() {
   return (
     <Page>
       <BlockStack gap={{ xs: "800", sm: "400" }}>
-        <fetcher.Form method="post" action="/api/wishlist" onSubmit={handleSubmit}>
+        <fetcher.Form method="post" action="/app/proxy" onSubmit={handleSubmit}>
           <InlineGrid columns={{ xs: "1fr", md: "2fr 5fr" }} gap="400">
             <Box
-              as="section"
+              as="section"  º
               paddingInlineStart={{ xs: 400, sm: 0 }}
               paddingInlineEnd={{ xs: 400, sm: 0 }}
             >

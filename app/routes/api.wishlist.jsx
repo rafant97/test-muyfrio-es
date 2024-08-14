@@ -17,10 +17,10 @@ export async function action({ request }) {
   console.log("Datos guardada:", { diaSemana, hora }, { applicationUrl });
 
   const response = json({ message: "Datos guardada", diaSemana, hora, applicationUrl});
-  return(response);
+  return json(response);
 }
 
 export async function loader() {
   
-  return json(wishListData);
+  return json({message: "Datos guardados"});
 }
