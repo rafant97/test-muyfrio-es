@@ -15,15 +15,14 @@ export const action: ActionFunction = async ({ request }) => {
   
       console.log("session: ", session);
 
-      if(request.method === "POST") {
-          //Modificar archivo json
-      } else {
-        // Consultar archivo json
-      }
+      //Leer el archivo JSON
+      const data = fs.readFileSync('./data.json', 'utf8');
+      const jsonData = JSON.parse(data);
+      console.log("jsonData: ", jsonData);
   
       // Responder con un mensaje de éxito
       return json(
-        { message: "Data saved successfully" }, 
+        { jsonData }, 
         {
           status: 200,
           headers: {
@@ -37,4 +36,3 @@ export const action: ActionFunction = async ({ request }) => {
     }
   };
   
-

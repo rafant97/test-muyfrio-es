@@ -3,7 +3,7 @@
 client_id = "c57e52d038c52dec927d26600fcc9d4b"
 name = "test"
 handle = "test-14823"
-application_url = "https://php-renewal-victor-assessments.trycloudflare.com"
+application_url = "https://allen-invitations-cabin-fraction.trycloudflare.com"
 embedded = true
 
 [build]
@@ -17,9 +17,9 @@ scopes = "write_products"
 
 [auth]
 redirect_urls = [
-  "https://php-renewal-victor-assessments.trycloudflare.com/auth/callback",
-  "https://php-renewal-victor-assessments.trycloudflare.com/auth/shopify/callback",
-  "https://php-renewal-victor-assessments.trycloudflare.com/api/auth/callback"
+  "https://allen-invitations-cabin-fraction.trycloudflare.com/auth/callback",
+  "https://allen-invitations-cabin-fraction.trycloudflare.com/auth/shopify/callback",
+  "https://allen-invitations-cabin-fraction.trycloudflare.com/api/auth/callback"
 ]
 
 [webhooks]

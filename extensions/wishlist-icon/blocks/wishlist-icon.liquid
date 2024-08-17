@@ -128,7 +128,11 @@
         }
       })
       .then(data => {
-        console.log(data, 'data');  // Aquí deberías ver el mensaje del servidor
+        console.log(data.jsonData);
+        const { diaSemana, hora } = data.jsonData;
+        serverDiaSemana = diaSemana;
+        serverHora = hora;
+          // Aquí deberías ver el mensaje del servidor
         resolve(data);
       })
       .catch(error => {
@@ -140,7 +144,8 @@
   
   testProxy();
   
-
+  console.log("serverDiaSemana: ", serverDiaSemana);
+  console.log("serverHora: ", serverHora);
   const currentDate = new Date();
   let currentMonth = currentDate.getMonth();
   let currentYear = currentDate.getFullYear();
