@@ -7,38 +7,102 @@ import {
   TextField,
   Button,
   OptionList,
-  Page
+  Page,
+  Popover,
+  Icon,
+  DatePicker
 } from "@shopify/polaris";
-import { useState, useCallback, useEffect } from "react";
+import {
+  CalendarIcon
+} from '@shopify/polaris-icons';
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useLoaderData, useFetcher } from "@remix-run/react";
 import { json } from "@remix-run/node";
 import * as fs from 'node:fs';
 
+
 export async function loader() {
   try {
-    const data = fs.readFileSync('./data.json', 'utf8'); // Lee el archivo
-    const jsonData = JSON.parse(data); // Convierte el contenido del archivo a JSON
-    return json(jsonData); // Envía los datos al frontend
+    const data = fs.readFileSync('./data.json', 'utf8'); 
+    const jsonData = JSON.parse(data);
+    
+    return json({ hora: jsonData.hora, diaSemana: jsonData.diaSemana, vacaciones: jsonData.vacaciones }); // Agrega las vacaciones aquí
   } catch (err) {
     console.error("Error al leer el archivo JSON:", err);
-    return json({ hora: '', diaSemana: '' }); // En caso de error, retornar valores por defecto
+    return json({ hora: '', diaSemana: '', vacaciones: [] }); // Valores por defecto
   }
 }
 
+
 export default function SettingsPage() {
+
   const data = useLoaderData();
-  const { hora, diaSemana } = data;
+  const { hora, diaSemana, vacaciones } = data;
+  console.log("vacaciones: ", vacaciones);
   const fetcher = useFetcher();
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [selectedDates, setSelectedDates] = useState([]);
 
   const [formState, setFormState] = useState({ hora });
   const [selectedDiaSemana, setSelectedDiaSemana] = useState([diaSemana]);
   const [showMessage, setShowMessage] = useState(false);
+  const [showMessageDate, setShowMessageDate] = useState(false);
+
+  const [{ month, year }, setDate] = useState({
+    month: selectedDate.getMonth(),
+    year: selectedDate.getFullYear(),
+  });
+  const [visible, setVisible] = useState(false);
+
+  const formattedValueArray = selectedDates.map(date => date.toLocaleDateString('es-ES')); // Mostrar todas las fechas seleccionadas
+  const formattedValue = selectedDate.toLocaleDateString('es-ES'); // Formato YYYY-MM-DD
+  const datePickerRef = useRef(null);
+  function isNodeWithinPopover(node) {
+    return datePickerRef?.current
+      ? nodeContainsDescendant(datePickerRef.current, node)
+      : false;
+  }
+
+  function handleInputValueChange() {
+    console.log("handleInputValueChange");
+  }
+  function handleOnClose({ relatedTarget }) {
+    setVisible(false);
+  }
+  function handleMonthChange(month, year) {
+    setDate({ month, year });
+  }
+  function handleDateSelection({ end: newSelectedDate }) {
+    if(formattedValueArray.includes(newSelectedDate.toLocaleDateString('es-ES'))){
+      setShowMessageDate(true);
+      setTimeout(() => {
+        setShowMessageDate(false);
+      }, 5000);
+      return
+    }
+    setSelectedDates([...selectedDates, newSelectedDate]);
+    setSelectedDate(newSelectedDate);
+    setVisible(false);
+  }
 
   // Actualizar el estado cuando los datos del loader cambian
   useEffect(() => {
     setFormState({ hora });
     setSelectedDiaSemana([diaSemana]); // Actualiza el estado cuando los datos cambien
   }, [diaSemana, hora]);
+
+  useEffect(() => {
+    console.log("selectedDates:", formattedValueArray);
+  }, [formattedValueArray]);
+
+  useEffect(() => {
+    if (selectedDate) {
+      setDate({
+        month: selectedDate.getMonth(),
+        year: selectedDate.getFullYear(),
+      });
+    }
+  }, [selectedDate]);
 
   const handleOptionChange = useCallback((selected) => {
     setSelectedDiaSemana(selected);
@@ -59,6 +123,15 @@ export default function SettingsPage() {
       return () => clearTimeout(timer);
     }
   }, [fetcher.data]);
+
+  function handleOnClose({ relatedTarget }) {
+    setVisible(false);
+  }
+
+  function handleRemoveValue(value) {
+    console.log(value)
+    setSelectedDates(selectedDates.filter((date) => date.toLocaleDateString('es-ES') !== value));
+  }
 
   return (
     <Page>
@@ -95,6 +168,7 @@ export default function SettingsPage() {
               </BlockStack>
             </Card>
           </InlineGrid>
+          <br></br>
           <InlineGrid columns={{ xs: "1fr", md: "2fr 5fr" }} gap="400">
             <Box as="section" paddingInlineStart={{ xs: 400, sm: 0 }} paddingInlineEnd={{ xs: 400, sm: 0 }}>
               <BlockStack gap="400">
@@ -117,10 +191,79 @@ export default function SettingsPage() {
                 />
               </BlockStack>
             </Card>
-          </InlineGrid>
-          <BlockStack gap="400" marginTop="400">
-            <Button submit={true}>Guardar</Button>
-          </BlockStack>
+            </InlineGrid>
+            <br></br>
+            <InlineGrid columns={{ xs: "1fr", md: "2fr 5fr" }} gap="400">
+              <Box as="section" paddingInlineStart={{ xs: 400, sm: 0 }} 
+                paddingInlineEnd={{ xs: 400, sm: 0 }}
+              >
+                <BlockStack gap="400">
+                  <Text as="h3" variant="headingMd">
+                        Vacaciones
+                  </Text>
+                  <Text as="p" variant="bodyMd">
+                    ¿Que días quieres marcar como no disponibles?
+                  </Text>
+                </BlockStack>
+              </Box>
+              <Card roundedAbove="sm">
+                <Box>
+                  <BlockStack gap="400">
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", width: "100%", overflow: "hidden" }}>
+                      {formattedValueArray.map((value, index) => (
+                        <div style={{ display: "flex", flexDirection: "row", marginRight: "20px", 
+                          gap: "5px", border: "1px solid black", padding: "5px",
+                          borderRadius: "5px", borderColor: "gray"
+                        }}>
+                          <p>
+                            {value}
+                          </p>
+                          <p onClick={() => handleRemoveValue(value)} style={{ cursor: "pointer" }}>X</p>
+                        </div>
+                      ))}
+                      
+                    </div>
+                    <Popover
+                      active={visible}
+                      autofocusTarget="none"
+                      preferredAlignment="left"
+                      fullWidth
+                      preferInputActivator={false}
+                      preferredPosition="below"
+                      preventCloseOnChildOverlayClick
+                      onClose={handleOnClose}
+                      activator={
+                        <TextField
+                          role="combobox"
+                          label={"Selecciona las fechas que no se pueden realizar pedidos"}
+                          prefix={<Icon source={CalendarIcon} />}
+                          value={formattedValue}
+                          onFocus={() => setVisible(true)}
+                          onChange={handleInputValueChange}
+                          autoComplete="off"
+                        />
+                      }
+                    >
+                      <Card ref={datePickerRef}>
+                      {showMessageDate ? <p style={{ color: 'red', textAlign: 'center', marginBottom: '10px' }}>Fecha ya seleccionada</p> : null}
+                        <DatePicker
+                          month={month}
+                          year={year}
+                          selected={selectedDate}
+                          onMonthChange={handleMonthChange}
+                          onChange={handleDateSelection}
+                        />
+                      </Card>
+                    </Popover>
+                  
+                  </BlockStack>
+                </Box>
+                </Card>
+              </InlineGrid>
+            <br></br>
+            <BlockStack gap="400" marginTop="400">
+              <Button submit={true}>Guardar</Button>
+            </BlockStack>
         </fetcher.Form>
         {showMessage && (
           <div style={{

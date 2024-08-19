@@ -3,7 +3,7 @@
 client_id = "c57e52d038c52dec927d26600fcc9d4b"
 name = "test"
 handle = "test-14823"
-application_url = "https://customized-bomb-cancel-indeed.trycloudflare.com"
+application_url = "https://pensions-aged-availability-whereas.trycloudflare.com"
 embedded = true
 
 [build]
@@ -17,9 +17,9 @@ scopes = "write_products"
 
 [auth]
 redirect_urls = [
-  "https://customized-bomb-cancel-indeed.trycloudflare.com/auth/callback",
-  "https://customized-bomb-cancel-indeed.trycloudflare.com/auth/shopify/callback",
-  "https://customized-bomb-cancel-indeed.trycloudflare.com/api/auth/callback"
+  "https://pensions-aged-availability-whereas.trycloudflare.com/auth/callback",
+  "https://pensions-aged-availability-whereas.trycloudflare.com/auth/shopify/callback",
+  "https://pensions-aged-availability-whereas.trycloudflare.com/api/auth/callback"
 ]
 
 [webhooks]
