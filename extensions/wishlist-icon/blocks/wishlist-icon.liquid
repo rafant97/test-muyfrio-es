@@ -109,212 +109,220 @@
   let serverDiaSemana;
   let serverHora;
 
-  function testProxy() {
-    return new Promise((resolve, reject) => {
-      fetch("https://www.comprarhieloseco.es/apps/proxytest", {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      })
-      .then(async response => {
-        // Verificamos si la respuesta es exitosa
-        if (!response.ok) {
-          const errorData = await response.json();
-          reject(new Error(`Error: ${errorData.error}`));
-        } else {
-          // Parseamos la respuesta JSON
-          return response.json();
-        }
-      })
-      .then(data => {
-        console.log(data.jsonData);
-        const { diaSemana, hora } = data.jsonData;
-        serverDiaSemana = diaSemana;
-        serverHora = hora;
-          // Aquí deberías ver el mensaje del servidor
-        resolve(data);
-      })
-      .catch(error => {
-        console.error('Error fetching data:', error);
-        reject(error);
-      });
+  //Para probar distintas horas
+  const testMode = false;
+  let testDate = new Date(2024, 7, 20, 16, 0);
+
+  // Actualizamos la función para que solo llame a renderCalendar cuando serverHora esté disponible.
+  async function testProxy() {
+  try {
+    const response = await fetch("https://www.comprarhieloseco.es/apps/proxytest", {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
     });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(`Error: ${errorData.error}`);
+    }
+
+    const data = await response.json();
+    console.log(data.jsonData);
+    const { diaSemana, hora } = data.jsonData;
+    serverDiaSemana = Number(diaSemana);
+    serverHora = hora;
+
+    // Ahora que tenemos serverHora, llamamos a renderCalendar.
+    renderCalendar();
+
+  } catch (error) {
+    console.error('Error fetching data:', error);
   }
-  
+  }
+
   testProxy();
-  
-  console.log("serverDiaSemana: ", serverDiaSemana);
-  console.log("serverHora: ", serverHora);
-  const currentDate = new Date();
+
+  const currentDate = testMode ? testDate : new Date();
+  console.log('Hora actual:', currentDate)
   let currentMonth = currentDate.getMonth();
   let currentYear = currentDate.getFullYear();
   let selectedDate = null; // Para almacenar la fecha seleccionada
-  
+
   const calendarBody = document.getElementById('calendarBody');
   const currentMonthElement = document.getElementById('currentMonth');
-  
+
   const prevBtn = document.getElementById('prevBtn');
   const nextBtn = document.getElementById('nextBtn');
 
   //TODO: COMPROBAR SI ESTÁ EL RECARGO EN EL CARRITO PARA ELIMINARLO
-  
 
   //TODO: VALIDACIÓN SI NO HA SELECCIONADO FECHA
-  const checkoutButton = document.querySelector('#checkout')
+  const checkoutButton = document.querySelector('#checkout');
   checkoutButton.style.pointerEvents = 'none';
-  checkoutButton.addEventListener('click', validarCheckout)
+  checkoutButton.addEventListener('click', validarCheckout);
 
   function validarCheckout() {
-    if(selectedDate === null) {
-        const contenedorCheckoutButton = document.querySelector('.cart__ctas')
-        checkoutButton.style.flexDirection = 'column';
-        const divMSJ = document.createElement("div")
-        divMSJ.innerText = "Selecciona un día de entrega"
-        contenedorCheckoutButton.appendChild(divMSJ)
-    }
+  if (selectedDate === null) {
+    const contenedorCheckoutButton = document.querySelector('.cart__ctas');
+    checkoutButton.style.flexDirection = 'column';
+    const divMSJ = document.createElement("div");
+    divMSJ.innerText = "Selecciona un día de entrega";
+    contenedorCheckoutButton.appendChild(divMSJ);
+  }
   }
 
   prevBtn.addEventListener('click', () => {
-      currentMonth--;
-      renderCalendar();
+  currentMonth--;
+  renderCalendar();
   });
   nextBtn.addEventListener('click', () => {
-      currentMonth++;
-      renderCalendar();
+  currentMonth++;
+  renderCalendar();
   });
 
-  
-
   function renderCalendar() {
-      const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
-      const firstDayIndex = new Date(currentYear, currentMonth, 1).getDay();
-  
-      currentMonthElement.textContent = new Date(currentYear, currentMonth).toLocaleDateString('default', { month: 'long', year: 'numeric' });
-  
-      let days = '';
-  
-      for (let i = 1; i <= firstDayIndex; i++) {
-          days += `<div class="calendar-day"></div>`;
-      }
-  
-      for (let i = 1; i <= daysInMonth; i++) {
-          const date = new Date(currentYear, currentMonth, i);
-          const className = getDayClassName(date);
-          const isPastDate = date < currentDate && date.toDateString() !== currentDate.toDateString();
-          const isSundayOrMonday = date.getDay() === 0 || date.getDay() === 1;
-  
-          if (isPastDate || isSundayOrMonday) {
-              days += `<div class="calendar-day ${className} past-date">${i}</div>`;
-          } else {
-              days += `<div class="calendar-day ${className}" onclick="selectDate(${i})">${i}</div>`;
-          }
-      }
-      
-  
-      calendarBody.innerHTML = days;
+  if (!serverHora) {
+    console.warn("serverHora no está definida todavía.");
+    return; // Salimos de la función si serverHora no está definida.
   }
-  
+
+  const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+  const firstDayIndex = new Date(currentYear, currentMonth, 1).getDay();
+
+  currentMonthElement.textContent = new Date(currentYear, currentMonth).toLocaleDateString('default', { month: 'long', year: 'numeric' });
+
+  let days = '';
+
+  const currentHour = currentDate.getHours();
+  const currentMinutes = currentDate.getMinutes();
+
+  const objetoHoraLimite = new Date();
+  const [cutOffHour, cutOffMinutes] = serverHora.split(":").map(Number); // Aseguramos que serverHora esté inicializada.
+  objetoHoraLimite.setHours(cutOffHour);
+  objetoHoraLimite.setMinutes(cutOffMinutes);
+
+  // Calcular la misma hora para los próximos 7 días
+  const horasProximosDias = [];
+  for (let i = 0; i < 7; i++) {
+    const proximoDia = new Date(objetoHoraLimite);
+    proximoDia.setDate(objetoHoraLimite.getDate() + i);
+    const fechaFormateada = proximoDia.toISOString().slice(0, 10) + ' ' + proximoDia.toTimeString().slice(0, 5);
+    horasProximosDias.push(fechaFormateada);
+  }
+  horasProximosDias.forEach(hora => console.log(hora));
+
+  for (let i = 1; i <= firstDayIndex; i++) {
+    days += `<div class="calendar-day"></div>`;
+  }
+
+  for (let i = 1; i <= daysInMonth; i++) {
+    const date = new Date(currentYear, currentMonth, i);
+    const className = getDayClassName(date);
+    const isPastDate = date < currentDate && date.toDateString() !== currentDate.toDateString();
+    const isSundayOrMonday = date.getDay() === 0 || date.getDay() === 1;
+
+    let isAfterCutoff = false;
+    if (currentDate.getDate() === date.getDate() - 1 && (currentHour > cutOffHour || (currentHour === cutOffHour && currentDate.getMinutes() > cutOffMinutes))) {
+      isAfterCutoff = true;
+    }
+
+    if (isPastDate || isSundayOrMonday || isAfterCutoff) {
+      days += `<div class="calendar-day ${className} past-date">${i}</div>`;
+    } else {
+      days += `<div class="calendar-day ${className}" onclick="selectDate(${i})">${i}</div>`;
+    }
+  }
+
+  calendarBody.innerHTML = days;
+  }
+
   function selectDate(day) {
-      selectedDate = new Date(currentYear, currentMonth, day);
-      checkoutButton.style.pointerEvents = 'auto';
-  
-      console.log(`Selected date: ${formatDate(selectedDate)}`);
-      //Comprobar si la fecha seleccionada es sabado
-      if (selectedDate.getDay() === 6) { 
-          console.log('Has seleccionado un sábado');
-          console.log("{{ product.variants.first.id }}")
+  selectedDate = new Date(currentYear, currentMonth, day);
+  checkoutButton.style.pointerEvents = 'auto';
 
-          //Comprobar si el recargo está en el carrito
-          getCartItems().then(cart => {
-            // Aquí accedes a los elementos del carrito
-            let recargoExists = cart.items.some(item => item.variant_id === 49131205362003);
-            if (recargoExists) {
-                console.log('El recargo ya existe en el carrito');
-              } else {
-                console.log('Añadiendo el recargo');
-                addRecargoToCart();
+  console.log(`Selected date: ${formatDate(selectedDate)}`);
+  console.log('dia semana:', serverDiaSemana)
+  if (selectedDate.getDay() == serverDiaSemana) { 
+    console.log('Has seleccionado un sábado');
 
-                // Añadir la fecha seleccionada como nota en el carrito
-                updateCartNote();
-              }
-          });
+    getCartItems().then(cart => {
+      let recargoExists = cart.items.some(item => item.variant_id === 49131205362003);
+      if (!recargoExists) {
+        addRecargoToCart();
+        updateCartNote();
       }
-      renderCalendar();
+    });
+  }
+  renderCalendar();
   }
 
   function updateCartNote() {
-    let formData = {
-      'note': `Fecha de entrega: ${formatDate(selectedDate)}`
-    };
+  let formData = {
+    'note': `Fecha de entrega: ${formatDate(selectedDate)}`
+  };
 
-    fetch(window.Shopify.routes.root + 'cart/update.js', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(formData)
-    })
-    .then(response => {
-      return response.json();
-    })
-    .catch((error) => {
-      console.error('Error:', error);
-    });
+  fetch(window.Shopify.routes.root + 'cart/update.js', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(formData)
+  })
+  .then(response => response.json())
+  .catch((error) => {
+    console.error('Error:', error);
+  });
   }
 
   function addRecargoToCart() {
-    console.log('Añadiendo el recargo')
-    let formData = {
-        'items': [{
-         'id': 49131205362003,
-         'quantity': 1,
-          'properties':{'Fecha de Entrega': formatDate(selectedDate)}
-        }]
-    };
-       
-    fetch(window.Shopify.routes.root + 'cart/add.js', {
-         method: 'POST',
-         headers: {
-           'Content-Type': 'application/json'
-         },
-         body: JSON.stringify(formData)
-    })
-    .then(response => {
-         return response.json();
-    })
-    .catch((error) => {
-         console.error('Error:', error);
-    });
+  console.log('Añadiendo el recargo');
+  let formData = {
+    'items': [{
+      'id': 49131205362003,
+      'quantity': 1,
+      'properties': {'Fecha de Entrega': formatDate(selectedDate)}
+    }]
+  };
+
+  fetch(window.Shopify.routes.root + 'cart/add.js', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(formData)
+  })
+  .then(response => response.json())
+  .catch((error) => {
+    console.error('Error:', error);
+  });
   }
 
   async function getCartItems() {
-        try {
-        const response = await fetch(window.Shopify.routes.root + 'cart.js');
-        const data = await response.json();
-        return data;
-        } catch (error) {
-        console.error('Error:', error);
-        }
-    }
-  
-  
+  try {
+    const response = await fetch(window.Shopify.routes.root + 'cart.js');
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error:', error);
+  }
+  }
+
   function getDayClassName(date) {
-      if (date.toDateString() === currentDate.toDateString()) {
-          return 'today';
-      }
-      if (selectedDate && date.toDateString() === selectedDate.toDateString()) {
-          return 'selected';
-      }
-      return '';
+  if (date.toDateString() === currentDate.toDateString()) {
+    return 'today';
   }
-  
+  if (selectedDate && date.toDateString() === selectedDate.toDateString()) {
+    return 'selected';
+  }
+  return '';
+  }
+
   function formatDate(date) {
-      return `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
+  return `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
   }
-  
-  renderCalendar();
-  
+
 </script>
 
 {% schema %}

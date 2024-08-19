@@ -11,26 +11,38 @@ import {
 } from "@shopify/polaris";
 import { useState, useCallback, useEffect } from "react";
 import { useLoaderData, useFetcher } from "@remix-run/react";
+import { json } from "@remix-run/node";
+import * as fs from 'node:fs';
 
 export async function loader() {
-  let diaSemanaSet = '0';
-  let hora = "20:00";
-  return { diaSemanaSet, hora };
+  try {
+    const data = fs.readFileSync('./data.json', 'utf8'); // Lee el archivo
+    const jsonData = JSON.parse(data); // Convierte el contenido del archivo a JSON
+    return json(jsonData); // Envía los datos al frontend
+  } catch (err) {
+    console.error("Error al leer el archivo JSON:", err);
+    return json({ hora: '', diaSemana: '' }); // En caso de error, retornar valores por defecto
+  }
 }
 
 export default function SettingsPage() {
-  const { diaSemanaSet, hora } = useLoaderData();
+  const data = useLoaderData();
+  const { hora, diaSemana } = data;
   const fetcher = useFetcher();
+
   const [formState, setFormState] = useState({ hora });
-  const [diaSemana, setDiaSemana] = useState([diaSemanaSet]);
+  const [selectedDiaSemana, setSelectedDiaSemana] = useState([diaSemana]);
   const [showMessage, setShowMessage] = useState(false);
 
-  const handleOptionChange = useCallback(
-    (selected) => {
-      setDiaSemana(selected);
-    },
-    [setDiaSemana]
-  );
+  // Actualizar el estado cuando los datos del loader cambian
+  useEffect(() => {
+    setFormState({ hora });
+    setSelectedDiaSemana([diaSemana]); // Actualiza el estado cuando los datos cambien
+  }, [diaSemana, hora]);
+
+  const handleOptionChange = useCallback((selected) => {
+    setSelectedDiaSemana(selected);
+  }, []);
 
   const handleSubmit = (event) => {
     event.preventDefault();
@@ -42,9 +54,9 @@ export default function SettingsPage() {
       setShowMessage(true);
       const timer = setTimeout(() => {
         setShowMessage(false);
-      }, 5000); // El mensaje desaparecerá después de 5 segundos
+      }, 5000);
 
-      return () => clearTimeout(timer); // Limpiar el temporizador al desmontar el componente
+      return () => clearTimeout(timer);
     }
   }, [fetcher.data]);
 
@@ -53,11 +65,7 @@ export default function SettingsPage() {
       <BlockStack gap={{ xs: "800", sm: "400" }}>
         <fetcher.Form method="post" action="/api/wishlist" onSubmit={handleSubmit}>
           <InlineGrid columns={{ xs: "1fr", md: "2fr 5fr" }} gap="400">
-            <Box
-              as="section"  º
-              paddingInlineStart={{ xs: 400, sm: 0 }}
-              paddingInlineEnd={{ xs: 400, sm: 0 }}
-            >
+            <Box as="section" paddingInlineStart={{ xs: 400, sm: 0 }} paddingInlineEnd={{ xs: 400, sm: 0 }}>
               <BlockStack gap="400">
                 <Text as="h3" variant="headingMd">
                   Añadir recargo
@@ -81,18 +89,14 @@ export default function SettingsPage() {
                     { label: 'Sábado', value: '6' },
                     { label: 'Domingo', value: '0' },
                   ]}
-                  selected={diaSemana}
+                  selected={selectedDiaSemana}
                 />
-                <input type="hidden" name="diaSemana" value={diaSemana[0]} />
+                <input type="hidden" name="diaSemana" value={selectedDiaSemana[0]} />
               </BlockStack>
             </Card>
           </InlineGrid>
           <InlineGrid columns={{ xs: "1fr", md: "2fr 5fr" }} gap="400">
-            <Box
-              as="section"
-              paddingInlineStart={{ xs: 400, sm: 0 }}
-              paddingInlineEnd={{ xs: 400, sm: 0 }}
-            >
+            <Box as="section" paddingInlineStart={{ xs: 400, sm: 0 }} paddingInlineEnd={{ xs: 400, sm: 0 }}>
               <BlockStack gap="400">
                 <Text as="h3" variant="headingMd">
                   Hora de corte
@@ -115,7 +119,7 @@ export default function SettingsPage() {
             </Card>
           </InlineGrid>
           <BlockStack gap="400" marginTop="400">
-            <Button submit={true}>Save</Button>
+            <Button submit={true}>Guardar</Button>
           </BlockStack>
         </fetcher.Form>
         {showMessage && (
