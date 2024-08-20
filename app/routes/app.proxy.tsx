@@ -18,7 +18,7 @@ export const action: ActionFunction = async ({ request }) => {
       //Leer el archivo JSON
       const data = fs.readFileSync('./data.json', 'utf8');
       const jsonData = JSON.parse(data);
-      console.log("jsonData: ", jsonData);
+      console.log("FROM APP PROXY jsonData: ", jsonData);
   
       // Responder con un mensaje de éxito
       return json(

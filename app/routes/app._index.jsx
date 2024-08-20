@@ -38,12 +38,13 @@ export default function SettingsPage() {
 
   const data = useLoaderData();
   const { hora, diaSemana, vacaciones } = data;
-  //const vacacionesArray = Object.values(vacaciones);
-  //const prueba = vacaciones.map(date => new Date(date))
+  const vacacionesArray = JSON.parse(vacaciones)
+
+  
   
   const fetcher = useFetcher();
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [selectedDates, setSelectedDates] = useState(vacaciones);
+  const [selectedDates, setSelectedDates] = useState(vacacionesArray);
 
   const [formState, setFormState] = useState({ hora });
   const [selectedDiaSemana, setSelectedDiaSemana] = useState([diaSemana]);
@@ -56,7 +57,6 @@ export default function SettingsPage() {
   });
   const [visible, setVisible] = useState(false);
 
-  const formattedValueArray = selectedDates
   const formattedValue = selectedDate.toLocaleDateString('es-ES'); // Formato YYYY-MM-DD
   const datePickerRef = useRef(null);
   function isNodeWithinPopover(node) {
@@ -126,8 +126,6 @@ export default function SettingsPage() {
     event.preventDefault();
     fetcher.submit(event.target, { method: "post" });
   };
-
-  
 
   function handleOnClose({ relatedTarget }) {
     setVisible(false);
@@ -241,15 +239,18 @@ export default function SettingsPage() {
                       preventCloseOnChildOverlayClick
                       onClose={handleOnClose}
                       activator={
-                        <TextField
-                          role="combobox"
-                          label={"Selecciona las fechas que no se pueden realizar pedidos"}
-                          prefix={<Icon source={CalendarIcon} />}
-                          value={formattedValue}
-                          onFocus={() => setVisible(true)}
-                          onChange={handleInputValueChange}
-                          autoComplete="off"
-                        />
+                        <>
+                          <TextField
+                            role="combobox"
+                            label={"Selecciona las fechas que no se pueden realizar pedidos"}
+                            prefix={<Icon source={CalendarIcon} />}
+                            value={formattedValue}
+                            onFocus={() => setVisible(true)}
+                            onChange={handleInputValueChange}
+                            autoComplete="off"
+                          />
+                          <input type="hidden" name="vacaciones" value={JSON.stringify(selectedDates)} />
+                        </>
                       }
                     >
                       <Card ref={datePickerRef}>
@@ -261,6 +262,7 @@ export default function SettingsPage() {
                           onMonthChange={handleMonthChange}
                           onChange={handleDateSelection}
                         />
+                        
                       </Card>
                     </Popover>
                   

@@ -9,16 +9,18 @@ let wishListData = {};
 
 export async function action({ request }) {
   const formData = await request.formData();
+
   const diaSemana = formData.get("diaSemana");
   const hora = formData.get("hora");
+  const vacaciones = formData.getAll("vacaciones");
 
   // Almacena los datos en memoria
-  wishListData = { diaSemana, hora };
+  wishListData = { diaSemana, hora, vacaciones };
 
   const applicationUrl = process.env.SHOPIFY_APP_URL ?? null;
 
   console.log("Datos guardada:", 
-    { diaSemana, hora }, { applicationUrl }
+    { diaSemana, hora, vacaciones }, { applicationUrl }
   );
 
   //Modificar la base de datos
@@ -27,6 +29,8 @@ export async function action({ request }) {
   const jsonData = JSON.parse(data);
   jsonData.diaSemana = diaSemana;
   jsonData.hora = hora;
+  jsonData.vacaciones = vacaciones;
+  console.log("jsonData: ", jsonData);
   fs.writeFileSync(dataPath, JSON.stringify(jsonData));
 
   const response = json({ 
