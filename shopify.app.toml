@@ -3,7 +3,7 @@
 client_id = "c57e52d038c52dec927d26600fcc9d4b"
 name = "test"
 handle = "test-14823"
-application_url = "https://pensions-aged-availability-whereas.trycloudflare.com"
+application_url = "https://poems-simply-hardcover-meta.trycloudflare.com"
 embedded = true
 
 [build]
@@ -17,9 +17,9 @@ scopes = "write_products"
 
 [auth]
 redirect_urls = [
-  "https://pensions-aged-availability-whereas.trycloudflare.com/auth/callback",
-  "https://pensions-aged-availability-whereas.trycloudflare.com/auth/shopify/callback",
-  "https://pensions-aged-availability-whereas.trycloudflare.com/api/auth/callback"
+  "https://poems-simply-hardcover-meta.trycloudflare.com/auth/callback",
+  "https://poems-simply-hardcover-meta.trycloudflare.com/auth/shopify/callback",
+  "https://poems-simply-hardcover-meta.trycloudflare.com/api/auth/callback"
 ]
 
 [webhooks]

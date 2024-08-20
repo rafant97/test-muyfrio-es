@@ -38,10 +38,12 @@ export default function SettingsPage() {
 
   const data = useLoaderData();
   const { hora, diaSemana, vacaciones } = data;
-  console.log("vacaciones: ", vacaciones);
+  //const vacacionesArray = Object.values(vacaciones);
+  //const prueba = vacaciones.map(date => new Date(date))
+  
   const fetcher = useFetcher();
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [selectedDates, setSelectedDates] = useState([]);
+  const [selectedDates, setSelectedDates] = useState(vacaciones);
 
   const [formState, setFormState] = useState({ hora });
   const [selectedDiaSemana, setSelectedDiaSemana] = useState([diaSemana]);
@@ -54,7 +56,7 @@ export default function SettingsPage() {
   });
   const [visible, setVisible] = useState(false);
 
-  const formattedValueArray = selectedDates.map(date => date.toLocaleDateString('es-ES')); // Mostrar todas las fechas seleccionadas
+  const formattedValueArray = selectedDates
   const formattedValue = selectedDate.toLocaleDateString('es-ES'); // Formato YYYY-MM-DD
   const datePickerRef = useRef(null);
   function isNodeWithinPopover(node) {
@@ -73,16 +75,17 @@ export default function SettingsPage() {
     setDate({ month, year });
   }
   function handleDateSelection({ end: newSelectedDate }) {
-    if(formattedValueArray.includes(newSelectedDate.toLocaleDateString('es-ES'))){
+    if(selectedDates.includes(newSelectedDate.toLocaleDateString('es-ES'))){
       setShowMessageDate(true);
       setTimeout(() => {
         setShowMessageDate(false);
       }, 5000);
       return
     }
-    setSelectedDates([...selectedDates, newSelectedDate]);
-    setSelectedDate(newSelectedDate);
-    setVisible(false);
+    const newSelectedDateFormatted = newSelectedDate.toLocaleDateString('es-ES');
+    setSelectedDates([...selectedDates, newSelectedDateFormatted]);
+    // setSelectedDate(newSelectedDate);
+    // setVisible(false);
   }
 
   // Actualizar el estado cuando los datos del loader cambian
@@ -90,10 +93,6 @@ export default function SettingsPage() {
     setFormState({ hora });
     setSelectedDiaSemana([diaSemana]); // Actualiza el estado cuando los datos cambien
   }, [diaSemana, hora]);
-
-  useEffect(() => {
-    console.log("selectedDates:", formattedValueArray);
-  }, [formattedValueArray]);
 
   useEffect(() => {
     if (selectedDate) {
@@ -104,14 +103,9 @@ export default function SettingsPage() {
     }
   }, [selectedDate]);
 
-  const handleOptionChange = useCallback((selected) => {
-    setSelectedDiaSemana(selected);
-  }, []);
-
-  const handleSubmit = (event) => {
-    event.preventDefault();
-    fetcher.submit(event.target, { method: "post" });
-  };
+  useEffect(() => {
+    console.log("selectedDates:", selectedDates);
+  }, [selectedDates]);
 
   useEffect(() => {
     if (fetcher.data) {
@@ -124,13 +118,24 @@ export default function SettingsPage() {
     }
   }, [fetcher.data]);
 
+  const handleOptionChange = useCallback((selected) => {
+    setSelectedDiaSemana(selected);
+  }, []);
+
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    fetcher.submit(event.target, { method: "post" });
+  };
+
+  
+
   function handleOnClose({ relatedTarget }) {
     setVisible(false);
   }
 
   function handleRemoveValue(value) {
     console.log(value)
-    setSelectedDates(selectedDates.filter((date) => date.toLocaleDateString('es-ES') !== value));
+    setSelectedDates(selectedDates.filter((date) => date !== value));
   }
 
   return (
@@ -209,16 +214,19 @@ export default function SettingsPage() {
               <Card roundedAbove="sm">
                 <Box>
                   <BlockStack gap="400">
-                    <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", width: "100%", overflow: "hidden" }}>
-                      {formattedValueArray.map((value, index) => (
-                        <div style={{ display: "flex", flexDirection: "row", marginRight: "20px", 
+                    <div style={{ display: "flex", flexWrap: "wrap", 
+                      gap: "10px", width: "100%", overflow: "hidden" }}>
+                      {selectedDates.map((value, index) => (
+                        <div style={{ display: "flex", 
+                          flexDirection: "row", marginRight: "20px", 
                           gap: "5px", border: "1px solid black", padding: "5px",
                           borderRadius: "5px", borderColor: "gray"
                         }}>
                           <p>
                             {value}
                           </p>
-                          <p onClick={() => handleRemoveValue(value)} style={{ cursor: "pointer" }}>X</p>
+                          <p onClick={() => handleRemoveValue(value)} 
+                          style={{ cursor: "pointer" }}>X</p>
                         </div>
                       ))}
                       
