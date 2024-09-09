@@ -241,7 +241,7 @@
                       <div class="calendar">
                           <div class="calendar-header">
                               <button id="prevBtn" class="calendar-btn">-</button>
-                              <h2 id="currentMonth"></h2>
+                              <h2 id="currentMonth" class="textMonth"></h2>
                               <button id="nextBtn" class="calendar-btn">+</button>
                           </div>
                           <!-- Contenedor para los días de la semana -->
@@ -324,6 +324,11 @@
 
 <style>
 
+  .textMonth {
+    text-align: center;
+    padding: 10px 0 0 0;
+  }
+
   .calendar{
       width: 300px;
       background-color: #fff;
@@ -405,7 +410,8 @@
   }
 
   .calendar-day.selected {
-  background-color: #0f0; /* Fondo verde para el día seleccionado */
+    background-color: var(--button-bg-grey);
+    color: white;
   }
 
   .calendar-day.past-date {
