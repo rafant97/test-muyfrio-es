@@ -13,14 +13,17 @@ export const action = async ({ request }) => {
   // More info: https://shopify.dev/docs/apps/build/cli-for-apps/app-configuration
   switch (topic) {
     case "APP_UNINSTALLED":
-      if (session) {
-        await db.session.deleteMany({ where: { shop } });
-      }
+      console.log("------------------------------Uninstalled-----------------------");
 
       break;
     case "CUSTOMERS_DATA_REQUEST":
     case "CUSTOMERS_REDACT":
     case "SHOP_REDACT":
+    case "ORDERS_CREATE":
+      console.log("Received webhook:");
+      break;
+    case "PRODUCTS_UPDATE":
+      break;
     default:
       throw new Response("Unhandled webhook topic", { status: 404 });
   }
