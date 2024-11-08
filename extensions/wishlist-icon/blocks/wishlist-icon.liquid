@@ -440,6 +440,7 @@
 
 
 </style>
+
 <script>
   //Lógica calendario nuevo
   let serverDiaSemana;
@@ -447,45 +448,46 @@
   let serverVacaciones;
   let cargandoRecargo = false;
 
+  console.log('id pedido: {{ routes.all_products_collection_url }}')
+
   //Para probar distintas horas
   const testMode = false;
   let testDate = new Date(2024, 7, 20, 16, 0);
 
   // Actualizamos la función para que solo llame a renderCalendar cuando serverHora esté disponible.
   async function testProxy() {
-    try {
-      const response = await fetch("https://www.comprarhieloseco.es/apps/proxytest", {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+  try {
+    const response = await fetch("https://www.comprarhieloseco.es/apps/proxytest", {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(`Error: ${errorData.error}`);
-      }
-
-      const data = await response.json();
-      console.log(data.jsonData);
-      const { diaSemana, hora, vacaciones } = data.jsonData;
-      serverDiaSemana = Number(diaSemana);
-      serverHora = hora;
-      serverVacaciones = JSON.parse(vacaciones);
-      console.log('días vacaciones: ', serverVacaciones)
-
-      // Ahora que tenemos serverHora, llamamos a renderCalendar.
-      renderCalendar();
-
-    } catch (error) {
-      console.error('Error fetching data:', error);
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(`Error: ${errorData.error}`);
     }
+
+    const data = await response.json();
+    console.log(data.jsonData);
+    const { diaSemana, hora, vacaciones } = data.jsonData;
+    serverDiaSemana = Number(diaSemana);
+    serverHora = hora;
+    serverVacaciones = JSON.parse(vacaciones);
+    console.log('Hora de corte: ', hora)
+
+    // Ahora que tenemos serverHora, llamamos a renderCalendar.
+    renderCalendar();
+
+  } catch (error) {
+    console.error('Error fetching data:', error);
+  }
   }
 
   testProxy();
 
   const currentDate = testMode ? testDate : new Date();
-  //console.log('Hora actual:', currentDate)
   let currentMonth = currentDate.getMonth();
   let currentYear = currentDate.getFullYear();
   let selectedDate = null; // Para almacenar la fecha seleccionada
@@ -550,10 +552,11 @@
     const currentHour = currentDate.getHours();
     const currentMinutes = currentDate.getMinutes();
 
-    const objetoHoraLimite = new Date();
-    const [cutOffHour, cutOffMinutes] = serverHora.split(":").map(Number); // Aseguramos que serverHora esté inicializada.
-    objetoHoraLimite.setHours(cutOffHour);
-    objetoHoraLimite.setMinutes(cutOffMinutes);
+    const [cutOffHour, cutOffMinutes] = serverHora.split(":").map(Number);
+    const cutOffTime = new Date(currentDate);
+    cutOffTime.setHours(cutOffHour, cutOffMinutes, 0, 0);
+
+    const isPastCutoffTime = currentDate > cutOffTime;
 
     // Convertir serverVacaciones a objetos Date
     const vacacionesDates = serverVacaciones.map(dateStr => parseDate(dateStr));
@@ -564,103 +567,180 @@
     }
 
     for (let i = 1; i <= daysInMonth; i++) {
-        const date = new Date(currentYear, currentMonth, i);
-        const className = getDayClassName(date);
-        const isToday = date.toDateString() === currentDate.toDateString();
-        const isPastDate = date < currentDate && !isToday;
-        const isSundayOrMonday = date.getDay() === 0 || date.getDay() === 1;
+    const date = new Date(currentYear, currentMonth, i);
+    const className = getDayClassName(date);
+    const isToday = date.toDateString() === currentDate.toDateString();
+    const isTomorrow = new Date(currentDate.getTime() + 24 * 60 * 60 * 1000).toDateString() === date.toDateString();
+    const isPastDate = date < currentDate && !isToday;
+    const isSundayOrMonday = date.getDay() === 0 || date.getDay() === 1;
 
-        const isVacationDay = vacacionesDates.some(vacationDate => 
-            vacationDate.getDate() === date.getDate() &&
-            vacationDate.getMonth() === date.getMonth() &&
-            vacationDate.getFullYear() === date.getFullYear()
-        );
+    const isVacationDay = vacacionesDates.some(vacationDate => 
+      vacationDate.getDate() === date.getDate() &&
+      vacationDate.getMonth() === date.getMonth() &&
+      vacationDate.getFullYear() === date.getFullYear()
+    );
 
-        let isAfterCutoff = false;
-        if (currentDate.getDate() === date.getDate() - 1 && (currentHour > cutOffHour || (currentHour === cutOffHour && currentMinutes > cutOffMinutes))) {
-            isAfterCutoff = true;
-        }
+    let isDisabled = isPastDate || isSundayOrMonday || isVacationDay || isToday;
 
-        if (isPastDate || isSundayOrMonday || isAfterCutoff || isVacationDay || isToday) {
-            days += `<div class="calendar-day ${className} past-date">${i}</div>`;
-        } else {
-            days += `<div class="calendar-day ${className}" onclick="selectDate(${i})">${i}</div>`;
-        }
+    // Deshabilitar el día siguiente si es después de la hora de corte
+    if (isTomorrow && isPastCutoffTime) {
+      isDisabled = true;
     }
 
-    calendarBody.innerHTML = days;
+    if (isDisabled) {
+      days += `<div class="calendar-day ${className} past-date">${i}</div>`;
+    } else {
+      days += `<div class="calendar-day ${className}" onclick="selectDate(${i})">${i}</div>`;
+    }
   }
 
+  calendarBody.innerHTML = days;
+  }
 
-  function selectDate(day) {
-  selectedDate = new Date(currentYear, currentMonth, day);
-  checkoutButton.style.pointerEvents = 'auto';
+  let isProcessingCart = false;
 
-  console.log(`Selected date: ${formatDate(selectedDate)}`);
-  console.log('dia semana:', serverDiaSemana)
-  if (selectedDate.getDay() == serverDiaSemana) { 
-    console.log('Has seleccionado un día con recargo', serverDiaSemana);
+  async function selectDate(day) {
+    if (isProcessingCart) return;
 
-    getCartItems().then(cart => {
-      let recargoExists = cart.items.some(item => item.variant_id === 49131205362003);
-      if (!recargoExists) {
-        addRecargoToCart();
+    isProcessingCart = true;
+    checkoutButton.disabled = true;
+
+    selectedDate = new Date(currentYear, currentMonth, day);
+  
+    console.log(`Selected date: ${formatDate(selectedDate)}`);
+    console.log('dia semana:', serverDiaSemana)
+    try {
+      if (selectedDate.getDay() == serverDiaSemana) { 
+        console.log('Has seleccionado un día con recargo', serverDiaSemana);
+
+        const cart = await getCartItems();
+        let recargoExists = cart.items.some(item => item.variant_id === 49131205362003);
+        
+        if (!recargoExists) {
+            await addRecargoToCart();
+        }
+      } else {
+        await updateCartNote();
       }
-    });
-  } else {
-    updateCartNote();
+      renderCalendar();
+      checkoutButton.style.pointerEvents = 'auto';
+      checkoutButton.disabled = false;
+    } catch (error) {
+      console.error('Error processing cart:', error);
+      alert('Ha ocurrido un error. Por favor, intenta de nuevo.');
+    } finally {
+      isProcessingCart = false;
+    }
   }
-  renderCalendar();
+
+  async function addOrderTag(orderId, deliveryDate) {
+    try {
+      const response = await fetch("/addOrderTag", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ order_id: orderId, delivery_date: deliveryDate }),
+      });
+  
+      const result = await response.json();
+      if (result.success) {
+        console.log("Etiqueta añadida al pedido con éxito:", result.order);
+      } else {
+        console.error("Error al añadir la etiqueta:", result.error);
+      }
+    } catch (error) {
+      console.error("Error de red:", error);
+    }
   }
+
 
   async function updateCartNote() {
-    async function updateProductProperties(lineItemId, quantity, properties) {
-      console.log('Actualizando propiedades')
-      const carritoActualizado = {
-        'id': lineItemId,
-        'quantity': quantity,
-        'properties': {
-          'Fecha de entrega': properties
-        }
+    async function eliminarArticuloDelCarrito(key) {
+      try {
+        const response = await fetch('/cart/change.js', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            id: key,
+            quantity: 0
+          })
+        });
+        const data = await response.json();
+        console.log('Artículo eliminado del carrito:', data);
+      } catch (error) {
+        console.error('Error al eliminar el artículo del carrito:', error);
       }
-      await fetch('/cart/change.js', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(carritoActualizado)
-      })
-      .then(response => response.json())
-      .then(data => {
-        console.log('Propiedades del producto actualizadas:', data);
-        console.log(carritoActualizado)
-        // Aquí puedes actualizar la UI o realizar alguna acción tras la actualización.
-      })
-      .catch(error => {
-        console.error('Error al actualizar las propiedades del producto:', error);
-      });
     }
-    await fetch('/cart.js')
-    .then(response => response.json())
-    .then(data => {
-      console.log(data);
-      if (data.items.length > 0) {
-        console.log(data.items[0]);
-        const {key, quantity} = data.items[0]
-        const propiedades = formatDate(selectedDate);
-
-        console.log(key, quantity, propiedades)
-        
-        updateProductProperties(key, quantity, propiedades)
-
-      } else {
-        console.log('Tu carrito está vacío.');
+    //Comprobar si existe el recargo previamente
+    // Eliminar el artículo del carrito si existe
+  await fetch(window.Shopify.routes.root + 'cart.js', {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  })
+  .then(response => response.json())
+  .then(data => {
+    const articulosCarrito = data.items;
+    const promises = articulosCarrito.map(articulo => {
+      if (articulo.id === 49131205362003) {
+        console.log('Recargo sábado está en el carrito');
+        return eliminarArticuloDelCarrito(articulo.key);
       }
-    })
-    .catch(error => console.error('Error al obtener el carrito:', error));
+      return Promise.resolve(); // Para artículos que no son el recargo
+    });
+
+    return Promise.all(promises); // Asegura que todos los artículos recargo sean eliminados antes de continuar
+  })
+  .then(() => {
+    // Actualizar las propiedades después de eliminar el artículo
+    return fetch('/cart.js');
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.items.length > 0) {
+      async function updateProductProperties(lineItemId, quantity, properties) {
+        console.log('Actualizando propiedades')
+        const carritoActualizado = {
+          'id': lineItemId,
+          'quantity': quantity,
+          'properties': {
+            'Fecha de entrega': properties
+          }
+        }
+        await fetch('/cart/change.js', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(carritoActualizado)
+        })
+        .then(response => response.json())
+        .then(data => {
+          console.log('Propiedades del producto actualizadas:', data);
+          console.log(carritoActualizado)
+          // Aquí puedes actualizar la UI o realizar alguna acción tras la actualización.
+        })
+        .catch(error => {
+          console.error('Error al actualizar las propiedades del producto:', error);
+        });
+      }
+      console.log(data.items[0]);
+      const { key, quantity } = data.items[0];
+      const propiedades = formatDate(selectedDate);
+
+      console.log(key, quantity, propiedades);
+      return updateProductProperties(key, quantity, propiedades);
+    } else {
+      console.log('Tu carrito está vacío.');
+    }
+  })
+  .catch(error => console.error('Error al obtener el carrito:', error));
   }
 
-  
 
   async function addRecargoToCart() {
     console.log('Añadiendo el recargo');
@@ -675,22 +755,24 @@
       }]
     };
 
-    await fetch(window.Shopify.routes.root + 'cart/add.js', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(formData)
-    })
-    .then(response => response.json())
-    .then(data => {
-      console.log('Cart updated:', data);
-      cargandoRecargo = false;
+      try {
+        const response = await fetch(window.Shopify.routes.root + 'cart/add.js', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(formData)
+        });
+        
+        if (!response.ok) {
+          throw new Error('Error adding surcharge');
+        }
+        
+        const data = await response.json();
+        console.log('Cart updated:', data);
+    } finally {
       checkoutButton.style.display = 'block';
-    })
-    .catch((error) => {
-      console.error('Error:', error);
-    });
+    }
   }
 
   function formatDate(date) {
@@ -720,8 +802,6 @@
     }
     return '';
   }
-
-  //Desaparecer calendario anterior
 
   // Selecciona el contenedor donde se espera que aparezca el elemento
   const textarea = document.querySelector('.form-control.js-textarea-autosize[name="note"]');

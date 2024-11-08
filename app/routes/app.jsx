@@ -24,7 +24,7 @@ export default function App() {
           Home
         </Link>
         <Link to="/app/proxy">
-          Proxy Endpoint
+          Create surcharge
         </Link>
       </NavMenu>
       <Outlet />
