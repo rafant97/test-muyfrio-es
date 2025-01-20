@@ -3,7 +3,7 @@
 client_id = "c57e52d038c52dec927d26600fcc9d4b"
 name = "test"
 handle = "test-14823"
-application_url = "https://marker-lamps-analysis-html.trycloudflare.com"
+application_url = "https://urge-sage-holding-hobby.trycloudflare.com"
 embedded = true
 
 [build]
@@ -17,9 +17,9 @@ scopes = "write_products"
 
 [auth]
 redirect_urls = [
-  "https://marker-lamps-analysis-html.trycloudflare.com/auth/callback",
-  "https://marker-lamps-analysis-html.trycloudflare.com/auth/shopify/callback",
-  "https://marker-lamps-analysis-html.trycloudflare.com/api/auth/callback"
+  "https://urge-sage-holding-hobby.trycloudflare.com/auth/callback",
+  "https://urge-sage-holding-hobby.trycloudflare.com/auth/shopify/callback",
+  "https://urge-sage-holding-hobby.trycloudflare.com/api/auth/callback"
 ]
 
 [webhooks]
@@ -30,7 +30,7 @@ api_version = "2024-07"
   uri = "https://trek-spent-downtown-canon.trycloudflare.com/webhooks"
 
 [app_proxy]
-url = "https://marker-lamps-analysis-html.trycloudflare.com/app/proxy"
+url = "https://urge-sage-holding-hobby.trycloudflare.com/app/proxy"
 subpath = "proxytest"
 prefix = "apps"
 
