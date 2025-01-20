@@ -26,10 +26,20 @@ export async function loader() {
     const data = fs.readFileSync('./data.json', 'utf8'); 
     const jsonData = JSON.parse(data);
     
-    return json({ hora: jsonData.hora, diaSemana: jsonData.diaSemana, vacaciones: jsonData.vacaciones }); // Agrega las vacaciones aquí
+    return json({ 
+      hora: jsonData.hora, 
+      horaViernes: jsonData.horaViernes,
+      diaSemana: jsonData.diaSemana, 
+      vacaciones: jsonData.vacaciones 
+    });
   } catch (err) {
     console.error("Error al leer el archivo JSON:", err);
-    return json({ hora: '', diaSemana: '', vacaciones: [] }); // Valores por defecto
+    return json({ 
+      hora: '', 
+      horaViernes: '',
+      diaSemana: '', 
+      vacaciones: [] 
+    });
   }
 }
 
@@ -37,7 +47,7 @@ export async function loader() {
 export default function SettingsPage() {
 
   const data = useLoaderData();
-  const { hora, diaSemana, vacaciones } = data;
+  const { hora, horaViernes, diaSemana, vacaciones } = data;
   const vacacionesArray = JSON.parse(vacaciones)
 
   
@@ -46,7 +56,10 @@ export default function SettingsPage() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [selectedDates, setSelectedDates] = useState(vacacionesArray);
 
-  const [formState, setFormState] = useState({ hora });
+  const [formState, setFormState] = useState({ 
+    hora,
+    horaViernes 
+  });
   const [selectedDiaSemana, setSelectedDiaSemana] = useState([diaSemana]);
   const [showMessage, setShowMessage] = useState(false);
   const [showMessageDate, setShowMessageDate] = useState(false);
@@ -90,9 +103,9 @@ export default function SettingsPage() {
 
   // Actualizar el estado cuando los datos del loader cambian
   useEffect(() => {
-    setFormState({ hora });
+    setFormState({ hora, horaViernes });
     setSelectedDiaSemana([diaSemana]); // Actualiza el estado cuando los datos cambien
-  }, [diaSemana, hora]);
+  }, [diaSemana, hora, horaViernes]);
 
   useEffect(() => {
     if (selectedDate) {
@@ -180,114 +193,119 @@ export default function SettingsPage() {
                 </Text>
                 <Text as="p" variant="bodyMd">
                   ¿A partir de qué hora quieres dejar de recibir pedidos?
-                  (Se aplica a todos los días de la semana)
                 </Text>
               </BlockStack>
             </Box>
             <Card roundedAbove="sm">
               <BlockStack gap="400">
                 <TextField
-                  label="Hora en formato 24h (ejemplo: 20:00)"
+                  label="Hora de corte general (ejemplo: 20:00)"
                   value={formState.hora}
                   onChange={(value) => setFormState({ ...formState, hora: value })}
                   name="hora"
                 />
+                <TextField
+                  label="Hora de corte viernes (ejemplo: 20:00)"
+                  value={formState.horaViernes}
+                  onChange={(value) => setFormState({ ...formState, horaViernes: value })}
+                  name="horaViernes"
+                />
               </BlockStack>
             </Card>
-            </InlineGrid>
-            <br></br>
-            <InlineGrid columns={{ xs: "1fr", md: "2fr 5fr" }} gap="400">
-              <Box as="section" paddingInlineStart={{ xs: 400, sm: 0 }} 
-                paddingInlineEnd={{ xs: 400, sm: 0 }}
-              >
+          </InlineGrid>
+          <br></br>
+          <InlineGrid columns={{ xs: "1fr", md: "2fr 5fr" }} gap="400">
+            <Box as="section" paddingInlineStart={{ xs: 400, sm: 0 }} 
+              paddingInlineEnd={{ xs: 400, sm: 0 }}
+            >
+              <BlockStack gap="400">
+                <Text as="h3" variant="headingMd">
+                      Vacaciones
+                </Text>
+                <Text as="p" variant="bodyMd">
+                  ¿Que días quieres marcar como no disponibles?
+                </Text>
+              </BlockStack>
+            </Box>
+            <Card roundedAbove="sm">
+              <Box>
                 <BlockStack gap="400">
-                  <Text as="h3" variant="headingMd">
-                        Vacaciones
-                  </Text>
-                  <Text as="p" variant="bodyMd">
-                    ¿Que días quieres marcar como no disponibles?
-                  </Text>
+                  <div style={{ display: "flex", flexWrap: "wrap", 
+                    gap: "10px", width: "100%", overflow: "hidden" }}>
+                    {selectedDates.map((value, index) => (
+                      <div style={{ display: "flex", 
+                        flexDirection: "row", marginRight: "20px", 
+                        gap: "5px", border: "1px solid black", padding: "5px",
+                        borderRadius: "5px", borderColor: "gray"
+                      }}>
+                        <p>
+                          {value}
+                        </p>
+                        <p onClick={() => handleRemoveValue(value)} 
+                        style={{ cursor: "pointer" }}>X</p>
+                      </div>
+                    ))}
+                    
+                  </div>
+                  <Popover
+                    active={visible}
+                    autofocusTarget="none"
+                    preferredAlignment="left"
+                    fullWidth
+                    preferInputActivator={false}
+                    preferredPosition="below"
+                    preventCloseOnChildOverlayClick
+                    onClose={handleOnClose}
+                    activator={
+                      <>
+                        <TextField
+                          role="combobox"
+                          label={"Selecciona las fechas que no se pueden realizar pedidos"}
+                          prefix={<Icon source={CalendarIcon} />}
+                          value={formattedValue}
+                          onFocus={() => setVisible(true)}
+                          onChange={handleInputValueChange}
+                          autoComplete="off"
+                        />
+                        <input type="hidden" name="vacaciones" value={JSON.stringify(selectedDates)} />
+                      </>
+                    }
+                  >
+                    <Card ref={datePickerRef}>
+                    {showMessageDate ? <p style={{ color: 'red', textAlign: 'center', marginBottom: '10px' }}>Fecha ya seleccionada</p> : null}
+                      <DatePicker
+                        month={month}
+                        year={year}
+                        selected={selectedDate}
+                        onMonthChange={handleMonthChange}
+                        onChange={handleDateSelection}
+                      />
+                      
+                    </Card>
+                  </Popover>
+                
                 </BlockStack>
               </Box>
-              <Card roundedAbove="sm">
-                <Box>
-                  <BlockStack gap="400">
-                    <div style={{ display: "flex", flexWrap: "wrap", 
-                      gap: "10px", width: "100%", overflow: "hidden" }}>
-                      {selectedDates.map((value, index) => (
-                        <div style={{ display: "flex", 
-                          flexDirection: "row", marginRight: "20px", 
-                          gap: "5px", border: "1px solid black", padding: "5px",
-                          borderRadius: "5px", borderColor: "gray"
-                        }}>
-                          <p>
-                            {value}
-                          </p>
-                          <p onClick={() => handleRemoveValue(value)} 
-                          style={{ cursor: "pointer" }}>X</p>
-                        </div>
-                      ))}
-                      
-                    </div>
-                    <Popover
-                      active={visible}
-                      autofocusTarget="none"
-                      preferredAlignment="left"
-                      fullWidth
-                      preferInputActivator={false}
-                      preferredPosition="below"
-                      preventCloseOnChildOverlayClick
-                      onClose={handleOnClose}
-                      activator={
-                        <>
-                          <TextField
-                            role="combobox"
-                            label={"Selecciona las fechas que no se pueden realizar pedidos"}
-                            prefix={<Icon source={CalendarIcon} />}
-                            value={formattedValue}
-                            onFocus={() => setVisible(true)}
-                            onChange={handleInputValueChange}
-                            autoComplete="off"
-                          />
-                          <input type="hidden" name="vacaciones" value={JSON.stringify(selectedDates)} />
-                        </>
-                      }
-                    >
-                      <Card ref={datePickerRef}>
-                      {showMessageDate ? <p style={{ color: 'red', textAlign: 'center', marginBottom: '10px' }}>Fecha ya seleccionada</p> : null}
-                        <DatePicker
-                          month={month}
-                          year={year}
-                          selected={selectedDate}
-                          onMonthChange={handleMonthChange}
-                          onChange={handleDateSelection}
-                        />
-                        
-                      </Card>
-                    </Popover>
-                  
-                  </BlockStack>
-                </Box>
-                </Card>
-              </InlineGrid>
-            <br></br>
-            <BlockStack gap="400" marginTop="400">
-              <Button submit={true}>Guardar</Button>
-            </BlockStack>
-        </fetcher.Form>
-        {showMessage && (
-          <div style={{
-            backgroundColor: 'green',
-            color: 'white',
-            padding: '10px',
-            borderRadius: '5px',
-            marginTop: '20px',
-            textAlign: 'center'
-          }}>
-            Datos guardados
-          </div>
-        )}
-      </BlockStack>
-    </Page>
-  );
+              </Card>
+            </InlineGrid>
+          <br></br>
+          <BlockStack gap="400" marginTop="400">
+            <Button submit={true}>Guardar</Button>
+          </BlockStack>
+      </fetcher.Form>
+      {showMessage && (
+        <div style={{
+          backgroundColor: 'green',
+          color: 'white',
+          padding: '10px',
+          borderRadius: '5px',
+          marginTop: '20px',
+          textAlign: 'center'
+        }}>
+          Datos guardados
+        </div>
+      )}
+    </BlockStack>
+  </Page>
+);
 }
