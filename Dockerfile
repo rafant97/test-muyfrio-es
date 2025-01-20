@@ -1,23 +1,28 @@
-FROM node:18-alpine
-
-EXPOSE 3000
+FROM node:18-slim
 
 WORKDIR /app
 
-ENV NODE_ENV=production
+# Instalar OpenSSL y otras dependencias necesarias
+RUN apt-get update && apt-get install -y \
+    openssl \
+    && rm -rf /var/lib/apt/lists/*
 
-COPY package.json package-lock.json* ./
+# Copiar archivos de configuración primero
+COPY package*.json ./
+COPY prisma ./prisma/
 
-RUN npm ci --omit=dev && npm cache clean --force
-# Remove CLI packages since we don't need them in production by default.
-# Remove this line if you want to run CLI commands in your container.
-RUN npm remove @shopify/cli
+# Instalar dependencias
+RUN npm ci --omit=dev
+RUN npm cache clean --force
 
+# Generar Prisma Client
+RUN npx prisma generate
+
+# Copiar el resto de archivos
 COPY . .
 
+# Construir la aplicación
 RUN npm run build
 
-# You'll probably want to remove this in production, it's here to make it easier to test things!
-RUN rm -f prisma/dev.sqlite
-
+EXPOSE 8081
 CMD ["npm", "run", "docker-start"]

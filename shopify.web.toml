@@ -5,5 +5,5 @@ webhooks_path = "/webhooks"
 [commands]
 predev = "prisma generate && prisma migrate deploy"
 dev = "npm exec remix vite:dev"
-prebuild = "prisma generate && prisma migrate deploy"
+prebuild = "prisma generate"
 build = "npm exec remix vite:build"
