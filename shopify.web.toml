@@ -3,5 +3,7 @@ roles = ["frontend", "backend"]
 webhooks_path = "/webhooks"
 
 [commands]
-predev = "npx prisma generate"
-dev = "npx prisma migrate deploy && npm exec remix vite:dev"
+predev = "prisma generate && prisma migrate deploy"
+dev = "npm exec remix vite:dev"
+prebuild = "prisma generate && prisma migrate deploy"
+build = "npm exec remix vite:build"
